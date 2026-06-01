@@ -48,7 +48,7 @@ Abra três janelas separadas do Prompt de Comando como **Administrador**. Execut
    ```text
    mongodb://SEU_IP_AQUI:27017/?directConnection=true
 
-```
+    ```
 
 3. Com a conexão estabelecida, expanda o terminal integrado **MONGOSH** (`>_ Open MongoDB shell`) localizado no rodapé da interface.
 4. Execute o comando de inicialização em bloco para unificar os membros propostos:
