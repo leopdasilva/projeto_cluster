@@ -45,18 +45,20 @@ Abra três janelas separadas do Prompt de Comando como **Administrador**. Execut
 ### Passo 3: Orquestração e Vinculação do Cluster (MONGOSH)
 1. Abra o **MongoDB Compass**.
 2. No campo de URI, estabeleça uma conexão direta apontando para o IP do seu nó principal e secundário:
-   ```Primário
+
+* **Principal:**
+   ```text
    mongodb://SEU_IP_AQUI:27017/?directConnection=true
 
     ```
-
-   ```Secundário
+* **Secundário:**
+   ```text
    mongodb://SEU_IP_AQUI:27018/?directConnection=true
 
     ```
 
-3. Com a conexão estabelecida, expanda o terminal integrado **MONGOSH** (`>_ Open MongoDB shell`) localizado no rodapé da interface.
-4. Execute o comando de inicialização em bloco para unificar os membros propostos:
+4. Com a conexão estabelecida, expanda o terminal integrado **MONGOSH** (`>_ Open MongoDB shell`) localizado no rodapé da interface.
+5. Execute o comando de inicialização em bloco para unificar os membros propostos:
 
 ```javascript
 rs.initiate({
