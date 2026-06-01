@@ -1,9 +1,8 @@
-```
+
 # 🚀 MongoDB 8.0 Replica Set: Alta Disponibilidade e Tolerância a Falhas
 
 Este projeto apresenta a implementação prática, configuração e validação de um ambiente de banco de dados NoSQL resiliente utilizando o **MongoDB 8.0** em modo **Replica Set (Cluster)**. O objetivo principal é garantir alta disponibilidade através de um mecanismo de *failover* automático, mantendo uma aplicação cliente (Python) operacional e sem interrupções mesmo diante da queda simulada do nó principal.
 
----
 
 ## 🏗️ 1. Arquitetura do Cluster Local
 
