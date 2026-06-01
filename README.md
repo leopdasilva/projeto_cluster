@@ -1,8 +1,9 @@
 
 PROJETO: MONGODB 8.0 REPLICA SET (ALTA DISPONIBILIDADE)
 
-1. RESUMO DO PROJETO
 ----------------------------------------------------------------------
+1. RESUMO DO PROJETO
+
 Este projeto apresenta a configuração e validação de um ambiente de 
 banco de dados NoSQL resiliente utilizando o MongoDB 8.0 em modo 
 Replica Set (Cluster). O objetivo principal é garantir a tolerância 
@@ -11,9 +12,9 @@ a falhas (failover automático) e permitir que uma aplicação externa
 sem interrupções, mesmo com a queda simulada do nó principal.
 
 
-
-2. ARQUITETURA DO CLUSTER LOCAL
 ----------------------------------------------------------------------
+2. ARQUITETURA DO CLUSTER LOCAL
+
 O cluster é configurado na máquina servidora utilizando três nós 
 independentes rodando em portas distintas:
 
@@ -30,9 +31,9 @@ independentes rodando em portas distintas:
   interna (quórum) para eleger um novo líder rapidamente.
 
 
-
-3. PASSO A PASSO DA EXECUÇÃO (INFRAESTRUTURA)
 ----------------------------------------------------------------------
+3. PASSO A PASSO DA EXECUÇÃO (INFRAESTRUTURA)
+
 ⚠️ ATENÇÃO IMPORTANTE SOBRE OS ENDEREÇOS DE IP:
 Nos comandos abaixo, o IP "10.68.21.78" foi utilizado como exemplo 
 durante os testes de desenvolvimento. Quem estiver seguindo este 
@@ -81,9 +82,9 @@ No terminal MONGOSH (>_ Open MongoDb shell), rodar o comando de unificação:
 O comando retornará { ok: 1 }, ativando o Replica Set com sucesso.
 
 
-
-4. DESAFIOS RESOLVIDOS (TROUBLESHOOTING)
 ----------------------------------------------------------------------
+4. DESAFIOS RESOLVIDOS (TROUBLESHOOTING)
+
 Durante as fases de testes, o projeto enfrentou e superou os 
 seguintes erros de sistemas distribuídos:
 
@@ -108,9 +109,9 @@ seguintes erros de sistemas distribuídos:
   Firewall do Windows Defender para liberar o tráfego das portas.
 
 
-
-5. VALIDAÇÃO DO FAILOVER (TESTE PRÁTICO)
 ----------------------------------------------------------------------
+5. VALIDAÇÃO DO FAILOVER (TESTE PRÁTICO)
+
 1. A aplicação cliente (Python) deve ser configurada apontando para 
    o IP da máquina que está hospedando o banco de dados:
    mongodb://SEU_IP_DO_SERVIDOR:27017,SEU_IP_DO_SERVIDOR:27018/?replicaSet=rs_escribas
@@ -126,4 +127,4 @@ seguintes erros de sistemas distribuídos:
 5. O driver da aplicação Python gerencia a troca de nós em tempo 
    real, continuando a salvar os novos registros na porta 27018 
    de forma automatizada, sem interromper o sistema ou perder dados.
-======================================================================
+
