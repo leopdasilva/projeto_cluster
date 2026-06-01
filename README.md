@@ -97,13 +97,9 @@ Para comprovar a resiliência e a tempo de resposta da arquitetura criada, o seg
 mongodb://SEU_IP_DO_SERVIDOR:27017,SEU_IP_DO_SERVIDOR:27018/?replicaSet=rs_escribas
 
 ```
-
-
 2. O script Python inicia o fluxo contínuo de envio e gravação de documentos no banco de dados.
 3. A janela do CMD correspondente ao Nó Principal (`27017`) é **fechada manualmente**, simulando um cenário real de queda de hardware ou oscilação de energia.
 4. **Comportamento Observado:** O Nó Árbitro (`27019`) detecta a ausência do líder instantaneamente e, em conjunto com o nó secundário, atinge o quórum necessário para promover o Nó Reserva (`27018`) ao papel de **Primary**.
 5. O driver da aplicação Python intercepta a mudança de topologia de forma automatizada, impede o travamento (*crash*) do software e redireciona todo o tráfego de gravação diretamente para a nova porta líder (`27018`) em tempo real e sem perda de dados.
 
-```
 
-```
