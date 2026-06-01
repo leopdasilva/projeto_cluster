@@ -44,7 +44,7 @@ Abra três janelas separadas do Prompt de Comando como **Administrador**. Execut
 
 ### Passo 3: Orquestração e Vinculação do Cluster (MONGOSH)
 1. Abra o **MongoDB Compass**.
-2. No campo de URI, estabeleça uma conexão direta apontando para o IP do seu nó principal e secundário:
+2. Crie duas conexões. No campo de URI de cada uma, estabeleça uma conexão direta apontando para o IP do seu nó principal e secundário:
 
 * **Principal:**
    ```text
