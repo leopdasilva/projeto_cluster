@@ -1,6 +1,5 @@
-======================================================================
+
 PROJETO: MONGODB 8.0 REPLICA SET (ALTA DISPONIBILIDADE)
-======================================================================
 
 1. RESUMO DO PROJETO
 ----------------------------------------------------------------------
@@ -10,6 +9,7 @@ Replica Set (Cluster). O objetivo principal é garantir a tolerância
 a falhas (failover automático) e permitir que uma aplicação externa 
 (como um script Python) envie dados continuamente para o servidor 
 sem interrupções, mesmo com a queda simulada do nó principal.
+
 
 
 2. ARQUITETURA DO CLUSTER LOCAL
@@ -28,6 +28,7 @@ independentes rodando em portas distintas:
 * NÓ ÁRBITRO (Arbiter - Porta 27019):
   Não armazena dados. A sua única função é desempatar a votação 
   interna (quórum) para eleger um novo líder rapidamente.
+
 
 
 3. PASSO A PASSO DA EXECUÇÃO (INFRAESTRUTURA)
@@ -80,6 +81,7 @@ No terminal MONGOSH (>_ Open MongoDb shell), rodar o comando de unificação:
 O comando retornará { ok: 1 }, ativando o Replica Set com sucesso.
 
 
+
 4. DESAFIOS RESOLVIDOS (TROUBLESHOOTING)
 ----------------------------------------------------------------------
 Durante as fases de testes, o projeto enfrentou e superou os 
@@ -104,6 +106,7 @@ seguintes erros de sistemas distribuídos:
   Outro computador da rede local não conseguia enviar dados para o 
   servidor. Resolvido mapeando o IP físico no bind e desativando o 
   Firewall do Windows Defender para liberar o tráfego das portas.
+
 
 
 5. VALIDAÇÃO DO FAILOVER (TESTE PRÁTICO)
