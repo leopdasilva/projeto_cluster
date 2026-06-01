@@ -1,130 +1,103 @@
+```
+# 🚀 MongoDB 8.0 Replica Set: Alta Disponibilidade e Tolerância a Falhas
 
-PROJETO: MONGODB 8.0 REPLICA SET (ALTA DISPONIBILIDADE)
+Este projeto apresenta a implementação prática, configuração e validação de um ambiente de banco de dados NoSQL resiliente utilizando o **MongoDB 8.0** em modo **Replica Set (Cluster)**. O objetivo principal é garantir alta disponibilidade através de um mecanismo de *failover* automático, mantendo uma aplicação cliente (Python) operacional e sem interrupções mesmo diante da queda simulada do nó principal.
 
-----------------------------------------------------------------------
-1. RESUMO DO PROJETO
+---
 
-Este projeto apresenta a configuração e validação de um ambiente de 
-banco de dados NoSQL resiliente utilizando o MongoDB 8.0 em modo 
-Replica Set (Cluster). O objetivo principal é garantir a tolerância 
-a falhas (failover automático) e permitir que uma aplicação externa 
-(como um script Python) envie dados continuamente para o servidor 
-sem interrupções, mesmo com a queda simulada do nó principal.
+## 🏗️ 1. Arquitetura do Cluster Local
 
+A infraestrutura foi projetada para simular um ambiente distribuído na mesma máquina servidora, segmentando as funções do ecossistema em três nós independentes operando em portas lógicas distintas:
 
-----------------------------------------------------------------------
-2. ARQUITETURA DO CLUSTER LOCAL
+| Nó | Função | Porta | Diretório de Dados |
+| :--- | :--- | :--- | :--- |
+| **Nó Principal** (Primary) | Recebe todas as operações de escrita e leitura diretas da aplicação. | `27017` | `C:\data\db1` |
+| **Nó Reserva** (Secondary) | Replica os dados em tempo real. Elegível para assumir a liderança em caso de queda. | `27018` | `C:\data\db2` |
+| **Nó Árbitro** (Arbiter) | Não armazena dados. Responsável apenas por desempatar a votação de quórum. | `27019` | `C:\data\arb` |
 
-O cluster é configurado na máquina servidora utilizando três nós 
-independentes rodando em portas distintas:
+---
 
-* NÓ PRINCIPAL (Primary - Porta 27017):
-  Responsável por receber todas as operações de escrita e leitura 
-  diretas da aplicação.
+## 🛠️ 2. Passo a Passo da Configuração (Infraestrutura)
 
-* NÓ RESERVA (Secondary - Porta 27018):
-  Replica os dados do Nó Principal em tempo real. Se o nó principal 
-  ficar offline, este nó é elegível para se tornar o novo líder.
+> ⚠️ **ATENÇÃO CRÍTICA SOBRE OS ENDEREÇOS DE IP:**
+> O endereço de IP `10.68.21.78` utilizado neste guia serve estritamente como exemplo de desenvolvimento. Para replicar os passos com sucesso, você **DEVE** descobrir o IP atual da sua própria máquina (executando `ipconfig` no prompt de comando do Windows) e substituir todas as menções pelo IP da sua própria rede local.
 
-* NÓ ÁRBITRO (Arbiter - Porta 27019):
-  Não armazena dados. A sua única função é desempatar a votação 
-  interna (quórum) para eleger um novo líder rapidamente.
+### Passo 1: Sanetização e Limpeza do Ambiente
+1. Crie a estrutura de pastas vazias no disco local exatamente em: `C:\data\db1`, `C:\data\db2` e `C:\data\arb`.
+2. Certifique-se de remover arquivos residuais de execuções anteriores para evitar travas de memória (*lock files*).
+3. Abra o **Gerenciador de Tarefas do Windows** (`Ctrl + Shift + Esc`), acesse a aba **Serviços**, localize o serviço automático `MongoDB Server` e force a sua **Interrupção** para liberar a porta padrão `27017`.
 
+### Passo 2: Inicialização dos Nós via Prompt de Comando (CMD)
+Abra três janelas separadas do Prompt de Comando como **Administrador**. Execute um comando em cada terminal para iniciar os processos em segundo plano (substituindo `SEU_IP_AQUI` pelo seu IP numérico real):
 
-----------------------------------------------------------------------
-3. PASSO A PASSO DA EXECUÇÃO (INFRAESTRUTURA)
+* **Terminal 1 — Nó Principal:**
+    ```cmd
+    "C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe" --port 27017 --dbpath "C:\data\db1" --replSet rs_escribas --bind_ip 127.0.0.1,SEU_IP_AQUI
+    ```
+* **Terminal 2 — Nó Reserva:**
+    ```cmd
+    "C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe" --port 27018 --dbpath "C:\data\db2" --replSet rs_escribas --bind_ip 127.0.0.1,SEU_IP_AQUI
+    ```
+* **Terminal 3 — Nó Árbitro:**
+    ```cmd
+    "C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe" --port 27019 --dbpath "C:\data\arb" --replSet rs_escribas --bind_ip 127.0.0.1,SEU_IP_AQUI
+    ```
 
-⚠️ ATENÇÃO IMPORTANTE SOBRE OS ENDEREÇOS DE IP:
-Nos comandos abaixo, o IP "10.68.21.78" foi utilizado como exemplo 
-durante os testes de desenvolvimento. Quem estiver seguindo este 
-passo a passo DEVE obrigatoriamente descobrir o IP da sua própria 
-máquina atual (digitando "ipconfig" no terminal do Windows) e 
-substituir o "10.68.21.78" pelo IP da sua própria rede local.
+### Passo 3: Orquestração e Vinculação do Cluster (MONGOSH)
+1. Abra o **MongoDB Compass**.
+2. No campo de URI, estabeleça uma conexão direta apontando para o IP do seu nó principal:
+   ```text
+   mongodb://SEU_IP_AQUI:27017/?directConnection=true
 
-Passo 1: Limpeza dos Diretórios
-Criar a estrutura limpa de pastas no disco local: C:\data\db1, 
-C:\data\db2 e C:\data\arb. Os arquivos antigos devem ser removidos 
-para evitar travas de memória. O serviço padrão do Windows (MongoDB 
-Server) deve ser parado no Gerenciador de Tarefas antes de começar.
+```
 
-Passo 2: Inicialização dos Nós (CMD como Administrador)
-Abrir três janelas de terminal separadas para rodar os nós, configurados 
-para escutar tanto localmente (127.0.0.1) quanto no IP real da sua rede:
+3. Com a conexão estabelecida, expanda o terminal integrado **MONGOSH** (`>_ Open MongoDB shell`) localizado no rodapé da interface.
+4. Execute o comando de inicialização em bloco para unificar os membros propostos:
 
-  CMD 1 (Porta 27017):
-  "C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe" --port 27017 --dbpath "C:\data\db1" --replSet rs_escribas --bind_ip 127.0.0.1,SEU_IP_AQUI
+```javascript
+rs.initiate({
+  _id: "rs_escribas",
+  members: [
+    { _id: 0, host: "SEU_IP_AQUI:27017" },
+    { _id: 1, host: "SEU_IP_AQUI:27018" },
+    { _id: 2, host: "SEU_IP_AQUI:27019", arbiterOnly: true }
+  ]
+})
 
-  CMD 2 (Porta 27018):
-  "C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe" --port 27018 --dbpath "C:\data\db2" --replSet rs_escribas --bind_ip 127.0.0.1,SEU_IP_AQUI
+```
 
-  CMD 3 (Porta 27019):
-  "C:\Program Files\MongoDB\Server\8.0\bin\mongod.exe" --port 27019 --dbpath "C:\data\arb" --replSet rs_escribas --bind_ip 127.0.0.1,SEU_IP_AQUI
+*A saída bem-sucedida retornará a flag `{ ok: 1 }` e mudará o cabeçalho do prompt para o modo `[primary]`.*
 
-*(Lembre-se de substituir "SEU_IP_AQUI" pelo número do seu IP local).*
+---
 
-Passo 3: Ativação do Cluster (MONGOSH no Compass)
-Conectar ao MongoDB Compass através do seu IP real (ex: SEU_IP_AQUI:27017) 
-adicionando a flag "?directConnection=true" no campo de URI. 
+## 🔍 3. Desafios Resolvidos (Troubleshooting)
 
-Ex: mongodb://192.168.100.11:27018/?directConnection=true
+Durante o ciclo de desenvolvimento da infraestrutura, foram mapeados e superados os seguintes gargalos de sistemas distribuídos baseados em evidências de logs de erro reais:
 
-No terminal MONGOSH (>_ Open MongoDb shell), rodar o comando de unificação:
+* **Incompatibilidade de Versão (`Ponto de entrada não encontrado`):** Ocorria ao tentar executar binários do MongoDB compilados para builds do Windows mais recentes (como a v8.3) em sistemas operacionais acadêmicos que não possuíam o suporte necessário. **Solução:** Downgrade e fixação do ambiente na versão nativa estável **MongoDB 8.0**.
+* **Crash do Nó Árbitro (`exitCode:100`):** O processo da porta `27019` encerrava abruptamente ao herdar metadados conflitantes ou arquivos corrompidos de testes passados. **Solução:** Limpeza total e profunda de todos os arquivos remanescentes dentro da pasta `C:\data\arb`.
+* **Falha no Consenso de Rede (`replSetInitiate quorum check failed`):** Os nós não conseguiam se comunicar na rede local quando configurados com mapeamentos de escuta genéricos (ex: `0.0.0.0`). **Solução:** Amarração explícita combinando o loopback (`127.0.0.1`) e o IP numérico físico no parâmetro `--bind_ip`.
+* **Rejeição de Identidade de Host (`InvalidReplicaSetConfig`):** Ocorria quando a inicialização do cluster era solicitada via Compass usando apelidos de conexão (como `localhost` ou nomes textuais customizados) que divergiam dos endereços numéricos configurados. **Solução:** Padronização absoluta da string de conexão utilizando estritamente o IP de rede ativo.
+* **Conexão Recusada por Agentes Externos (`ECONNREFUSED` / Timeout):** Computadores clientes na rede local ficavam impedidos de enviar informações para o servidor. **Solução:** Configuração correta de múltiplas interfaces no bind e **desativação temporária do Firewall do Windows Defender** na máquina hospedeira para liberar o tráfego de entrada das portas utilizadas.
 
-  rs.initiate({
-    _id: "rs_escribas",
-    members: [
-      { _id: 0, host: "SEU_IP_AQUI:27017" },
-      { _id: 1, host: "SEU_IP_AQUI:27018" },
-      { _id: 2, host: "SEU_IP_AQUI:27019", arbiterOnly: true }
-    ]
-  })
+---
 
-O comando retornará { ok: 1 }, ativando o Replica Set com sucesso.
+## 🎯 4. Validação do Failover (Teste Prático)
 
+Para comprovar a resiliência e a tempo de resposta da arquitetura criada, o seguinte cenário de teste pode ser executado:
 
-----------------------------------------------------------------------
-4. DESAFIOS RESOLVIDOS (TROUBLESHOOTING)
+1. A aplicação cliente (Python) é configurada para se comunicar com o cluster passando os nós de dados disponíveis na string de conexão:
+```python
+mongodb://SEU_IP_DO_SERVIDOR:27017,SEU_IP_DO_SERVIDOR:27018/?replicaSet=rs_escribas
 
-Durante as fases de testes, o projeto enfrentou e superou os 
-seguintes erros de sistemas distribuídos:
-
-* Incompatibilidade de Versão (Ponto de entrada não encontrado):
-  A tentativa de rodar a versão 8.3 exigia recursos ausentes no 
-  sistema operacional do laboratório. Resolvido com a fixação 
-  estável na versão nativa 8.0 instalada na máquina.
-
-* Queda do Árbitro (exitCode:100):
-  O processo da porta 27019 fechava sozinho ao herdar metadados 
-  corrompidos ou travas de testes anteriores. Resolvido limpando 
-  completamente o conteúdo da pasta C:\data\arb.
-
-* Erro de Quórum (replSetInitiate quorum check failed):
-  Os nós não se comunicavam na rede usando o bind genérico (0.0.0.0). 
-  Resolvido passando explicitamente o IP correto e o loopback de 
-  forma combinada no comando de inicialização.
-
-* Conexão Recusada Externa (ECONNREFUSED / Timeout):
-  Outro computador da rede local não conseguia enviar dados para o 
-  servidor. Resolvido mapeando o IP físico no bind e desativando o 
-  Firewall do Windows Defender para liberar o tráfego das portas.
+```
 
 
-----------------------------------------------------------------------
-5. VALIDAÇÃO DO FAILOVER (TESTE PRÁTICO)
+2. O script Python inicia o fluxo contínuo de envio e gravação de documentos no banco de dados.
+3. A janela do CMD correspondente ao Nó Principal (`27017`) é **fechada manualmente**, simulando um cenário real de queda de hardware ou oscilação de energia.
+4. **Comportamento Observado:** O Nó Árbitro (`27019`) detecta a ausência do líder instantaneamente e, em conjunto com o nó secundário, atinge o quórum necessário para promover o Nó Reserva (`27018`) ao papel de **Primary**.
+5. O driver da aplicação Python intercepta a mudança de topologia de forma automatizada, impede o travamento (*crash*) do software e redireciona todo o tráfego de gravação diretamente para a nova porta líder (`27018`) em tempo real e sem perda de dados.
 
-1. A aplicação cliente (Python) deve ser configurada apontando para 
-   o IP da máquina que está hospedando o banco de dados:
-   mongodb://SEU_IP_DO_SERVIDOR:27017,SEU_IP_DO_SERVIDOR:27018/?replicaSet=rs_escribas
+```
 
-2. O script Python inicia o envio e a gravação de dados contínuos.
-
-3. A janela do CMD correspondente ao Nó Principal (27017) é fechada 
-   manualmente para simular uma queda inesperada de hardware.
-
-4. O Nó Árbitro (27019) detecta a ausência do líder e promove o Nó 
-   Reserva (27018) a novo líder (Primary).
-
-5. O driver da aplicação Python gerencia a troca de nós em tempo 
-   real, continuando a salvar os novos registros na porta 27018 
-   de forma automatizada, sem interromper o sistema ou perder dados.
-
+```
